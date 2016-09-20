@@ -3,6 +3,9 @@
 <html>
     <head>
         <title>Blogz</title>
+        <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
         <link rel="stylesheet" href="/css/normalize.css">
         <link rel="stylesheet" href="/css/styles.css">
     </head>
@@ -12,6 +15,8 @@
                 <li><a href="/">home</a></li>
                 <li><a href="/blog">all posts</a></li>
                 <li><a href="/blog/newpost">new post</a></li>
+                <li><a href="/login">logIN</a></li>
+                <li><a href="/logout">logOUT {{ CURRENT_USER }}</a></li>
             </ul>
         </nav>
         {% block content %}

@@ -6,8 +6,12 @@ import hashutils
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir), autoescape = True)
 
+CURRENT_USER = ""
+
 class BlogHandler(webapp2.RequestHandler):
     """ Utility class for gathering various useful methods that are used by most request handlers """
+
+
 
     def get_posts(self, limit, offset):
         """ Get all posts ordered by creation date (descending) """
@@ -19,9 +23,14 @@ class BlogHandler(webapp2.RequestHandler):
             Get all posts by a specific user, ordered by creation date (descending).
             The user parameter will be a User object.
         """
-
         # TODO - filter the query so that only posts by the given user
-        return None
+        #post = db.GqlQuery("SELECT * FROM Post WHERE author = '%s'" % user)
+        #return post
+        #query = Post.all().order('-created')
+        #return query.fetch(limit=limit, offset=offset)
+        query = Post.all().filter("author", user)
+        return query
+
 
     def get_user_by_name(self, username):
         """ Get a user object from the db, based on their username """
@@ -31,11 +40,16 @@ class BlogHandler(webapp2.RequestHandler):
 
     def login_user(self, user):
         """ Login a user specified by a User object user """
+        global CURRENT_USER
         user_id = user.key().id()
+        CURRENT_USER = user.username
         self.set_secure_cookie('user_id', str(user_id))
+
 
     def logout_user(self):
         """ Logout a user specified by a User object user """
+        global CURRENT_USER
+        CURRENT_USER = ""
         self.set_secure_cookie('user_id', '')
 
     def read_secure_cookie(self, name):
@@ -66,7 +80,7 @@ class IndexHandler(BlogHandler):
         """ List all blog users """
         users = User.all()
         t = jinja_env.get_template("index.html")
-        response = t.render(users = users)
+        response = t.render(users = users, CURRENT_USER=CURRENT_USER)
         self.response.write(response)
 
 class BlogIndexHandler(BlogHandler):
@@ -99,7 +113,7 @@ class BlogIndexHandler(BlogHandler):
         else:
             prev_page = None
 
-        if len(posts) == self.page_size and Post.all().count() > offset+self.page_size:
+        if Post.all().count() > offset+self.page_size: #
             next_page = page + 1
         else:
             next_page = None
@@ -112,7 +126,8 @@ class BlogIndexHandler(BlogHandler):
                     page_size=self.page_size,
                     prev_page=prev_page,
                     next_page=next_page,
-                    username=username)
+                    username=username,
+                    CURRENT_USER=CURRENT_USER)
         self.response.out.write(response)
 
 class NewPostHandler(BlogHandler):
@@ -120,7 +135,7 @@ class NewPostHandler(BlogHandler):
     def render_form(self, title="", body="", error=""):
         """ Render the new post form with or without an error, based on parameters """
         t = jinja_env.get_template("newpost.html")
-        response = t.render(title=title, body=body, error=error)
+        response = t.render(title=title, body=body, error=error, CURRENT_USER=CURRENT_USER)
         self.response.out.write(response)
 
     def get(self):
@@ -155,11 +170,11 @@ class ViewPostHandler(BlogHandler):
         post = Post.get_by_id(int(id))
         if post:
             t = jinja_env.get_template("post.html")
-            response = t.render(post=post)
+            response = t.render(post=post, CURRENT_USER=CURRENT_USER)
         else:
             error = "there is no post with id %s" % id
             t = jinja_env.get_template("404.html")
-            response = t.render(error=error)
+            response = t.render(error=error, CURRENT_USER=CURRENT_USER)
 
         self.response.out.write(response)
 
