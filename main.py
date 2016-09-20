@@ -29,7 +29,7 @@ class BlogHandler(webapp2.RequestHandler):
         #query = Post.all().order('-created')
         #return query.fetch(limit=limit, offset=offset)
         query = Post.all().filter("author", user)
-        return query
+        return query.fetch(limit=limit, offset=offset)
 
 
     def get_user_by_name(self, username):
@@ -104,8 +104,16 @@ class BlogIndexHandler(BlogHandler):
         if username:
             user = self.get_user_by_name(username)
             posts = self.get_posts_by_user(user, self.page_size, offset)
+            if Post.all().filter("author", user).count() > offset+self.page_size: #
+                next_page = page + 1
+            else:
+                next_page = None
         else:
             posts = self.get_posts(self.page_size, offset)
+            if Post.all().count() > offset+self.page_size: #
+                next_page = page + 1
+            else:
+                next_page = None
 
         # determine next/prev page numbers for navigation links
         if page > 1:
@@ -113,10 +121,7 @@ class BlogIndexHandler(BlogHandler):
         else:
             prev_page = None
 
-        if Post.all().count() > offset+self.page_size: #
-            next_page = page + 1
-        else:
-            next_page = None
+
 
         # render the page
         t = jinja_env.get_template("blog.html")
